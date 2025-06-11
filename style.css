@@ -305,3 +305,68 @@ body {
 #vault-view {
   animation: fadeIn 0.3s ease-out;
 }
+/* style.css - Ergänzungen */
+
+/* File Upload Stile */
+.file-icon {
+  font-size: 3em;
+  margin: 20px 0;
+}
+
+.file-info {
+  margin-top: 10px;
+  color: #666;
+}
+
+.file-info p {
+  margin: 5px 0;
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  z-index: 1001;
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast.fade-out {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from { bottom: -50px; opacity: 0; }
+  to { bottom: 20px; opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Folder Hover-Effekte */
+.folder:hover {
+  background: #f0f0f0;
+  transform: scale(1.02);
+}
+
+.folder:active {
+  transform: scale(0.98);
+}
+
+/* Button Hover-Effekte */
+#add-folder:hover, 
+#upload-file:hover {
+  opacity: 0.9;
+}
+
+#add-folder:active, 
+#upload-file:active {
+  transform: scale(0.98);
+}
