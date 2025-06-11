@@ -1,54 +1,388 @@
-/* Neue Stile für erweiterte Funktionen */
-.folder-actions {
+@@ -1,51 +1,44 @@
+/* style.css - Vollständige & korrigierte Version */
+
+:root {
+  --primary-color: #007AFF;
+  --background-color: #f0f0f0;
+  --calculator-bg: #ffffff;
+  --primary: #007AFF;
+  --background: #f0f0f0;
+  --calculator-bg: #fff;
+  --button-bg: #f9f9f9;
+  --button-active-bg: #e0e0e0;
+  --button-active: #e0e0e0;
+  --operator-bg: #f1f1f1;
+  --operator-active-bg: #d1d1d1;
+  --operator-active: #d1d1d1;
+  --display-bg: #000;
+  --display-color: #fff;
+  --border-radius: 16px;
+  --radius: 16px;
+  --shadow: 0 4px 8px rgba(0,0,0,0.1);
+  --danger-color: #FF3B30;
+}
+
+/* Reset & Basisstile */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, 
+               Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--background-color);
+  background: var(--background);
+  min-height: 100vh;
   display: flex;
-  gap: 5px;
-  margin-top: 10px;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.folder-actions button {
-  flex: 1;
-  padding: 5px;
-  font-size: 0.8em;
+.hidden {
+  display: none !important;
 }
 
-.file-list {
-  display: none;
+/* Taschenrechner Stile */
+/* Taschenrechner */
+#calculator-view {
+  width: 100%;
+  max-width: 400px;
+  background: var(--calculator-bg);
+  border-radius: var(--border-radius);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
-
-.file {
+@@ -60,7 +53,6 @@ body {
   display: flex;
   align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  justify-content: flex-end;
+  overflow: hidden;
 }
 
-.file-icon {
+.buttons {
+@@ -75,12 +67,11 @@ body {
+  padding: 20px;
   font-size: 1.5em;
-  margin-right: 10px;
+  background: var(--button-bg);
+  cursor: pointer;
+  transition: background 0.1s;
 }
 
-.file-info {
+.buttons button:active {
+  background: var(--button-active-bg);
+  background: var(--button-active);
+}
+
+.buttons .operator {
+@@ -89,14 +80,14 @@ body {
+}
+
+.buttons .operator:active {
+  background: var(--operator-active-bg);
+  background: var(--operator-active);
+}
+
+.buttons .zero {
+  grid-column: span 2;
+}
+
+/* Vault Stile */
+/* Tresor */
+#vault-view {
+  width: 100%;
+  max-width: 400px;
+@@ -106,7 +97,6 @@ body {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+.vault-header h1 {
+@@ -118,15 +108,14 @@ body {
+#back-to-calculator {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 1em;
+  color: var(--primary-color);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.vault-content {
+  background: white;
+  border-radius: var(--border-radius);
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+@@ -140,21 +129,14 @@ body {
+.vault-actions button {
   flex: 1;
-}
-
-.file-name {
+  padding: 12px;
+  background: var(--primary-color);
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1em;
   font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.file-meta {
-  font-size: 0.8em;
-  color: #666;
+.vault-actions button:active {
+  opacity: 0.8;
 }
 
-#current-folder {
-  font-weight: 600;
+/* Ordnerliste */
+/* Ordner */
+#folder-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+@@ -163,106 +145,54 @@ body {
+
+.folder {
+  background: #f8f8f8;
+  padding: 25px 15px;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  transition: transform 0.2s;
+}
+
+.folder:active {
+  transform: scale(0.98);
+  background: #e8e8e8;
+}
+
+.folder-icon {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+/* Modale Dialoge */
+/* Modale */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 300px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-content h2 {
   margin-bottom: 15px;
 }
 
-.modal select {
+.modal-content input {
   width: 100%;
-  padding: 10px;
-  margin: 10px 0;
+  padding: 12px;
+  margin: 15px 0;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: 1em;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  animation: modalIn 0.3s;
+}
+
+#set-password {
+  background: var(--primary-color);
+  color: white;
+}
+
+.modal-buttons button:active {
+  opacity: 0.8;
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Dateivorschau */
+#file-preview {
+  margin: 20px 0;
+  max-height: 300px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+@@ -272,101 +202,42 @@ body {
+  border-radius: 8px;
+}
+
+#file-preview audio {
+  width: 100%;
+  margin: 10px 0;
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 400px) {
+  .display {
+    font-size: 2.5em;
+    padding: 15px;
+    min-height: 80px;
+  }
+  
+  .buttons button {
+    padding: 15px;
+    font-size: 1.3em;
+  }
+  
+  #folder-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animationen */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#calculator-view, 
+#vault-view {
+  animation: fadeIn 0.3s ease-out;
+}
+/* style.css - Ergänzungen */
+
+/* File Upload Stile */
+.file-icon {
+  font-size: 3em;
+  margin: 20px 0;
+  margin: 10px 0;
+}
+
+.file-info {
+  margin-top: 10px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.file-info p {
+  margin: 5px 0;
+}
+
+/* Toast Notification */
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  z-index: 1001;
+  animation: slideIn 0.3s ease-out;
+  animation: toastIn 0.3s;
+}
+
+.toast.fade-out {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+@keyframes toastIn {
+  from { bottom: -50px; opacity: 0; }
+  to { bottom: 20px; opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Folder Hover-Effekte */
+.folder:hover {
+  background: #f0f0f0;
+  transform: scale(1.02);
+}
+
+.folder:active {
+  transform: scale(0.98);
+}
+
+/* Button Hover-Effekte */
+#add-folder:hover, 
+#upload-file:hover {
+  opacity: 0.9;
+}
+
+#add-folder:active, 
+#upload-file:active {
+  transform: scale(0.98);
+/* Responsive */
+@media (max-width: 400px) {
+  .display {
+    font-size: 2.5em;
+    padding: 15px;
+  }
+  
+  .buttons button {
+    padding: 15px;Add commentMore actions
+  }
 }
