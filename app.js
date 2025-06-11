@@ -1,65 +1,149 @@
-// INITIALISIERUNG
-document.addEventListener('DOMContentLoaded', () => {
-    // Nur Passwort-Modal anzeigen wenn kein Passwort existiert
-    if (!localStorage.getItem('vaultPassword')) {
-        document.getElementById('password-modal').style.display = 'flex';
-    }
-});
+// app.js - Vollständig korrigierte Version
 
-// PASSWORT HANDLING
-document.getElementById('set-password').addEventListener('click', () => {
-    const password = document.getElementById('new-password').value;
-    if (password) {
-        localStorage.setItem('vaultPassword', password);
-        document.getElementById('password-modal').style.display = 'none';
-    }
-});
-
-// TASCHENRECHNER LOGIK
+// Taschenrechner Variablen
 let currentInput = '0';
 let firstOperand = null;
 let operator = null;
 let shouldResetInput = false;
 
+// DOM Elemente
 const display = document.getElementById('display');
+const calculatorView = document.getElementById('calculator-view');
+const vaultView = document.getElementById('vault-view');
+const passwordModal = document.getElementById('password-modal');
+const newPasswordInput = document.getElementById('new-password');
+const setPasswordButton = document.getElementById('set-password');
 
-document.querySelectorAll('.buttons button').forEach(button => {
-    button.addEventListener('click', () => {
-        const value = button.getAttribute('data-value');
+// Initialisierung
+function initApp() {
+    // Passwort prüfen
+    if (!localStorage.getItem('vaultPassword')) {
+        passwordModal.style.display = 'flex';
+    } else {
+        passwordModal.style.display = 'none';
+    }
+    
+    // Taschenrechner-Buttons initialisieren
+    initCalculator();
+}
 
-        if (value === 'C') {
-            clearCalculator();
-        } else if (value === '=') {
-            if (checkPassword(currentInput)) {
-                document.getElementById('calculator-view').classList.add('hidden');
-                document.getElementById('vault-view').classList.remove('hidden');
-                loadFolders();
-                clearCalculator();
-            } else {
-                calculate();
-            }
-        } else if (['+', '-', '×', '÷'].includes(value)) {
-            handleOperator(value);
-        } else {
-            handleNumberInput(value);
-        }
-        updateDisplay();
+// Taschenrechner initialisieren
+function initCalculator() {
+    document.querySelectorAll('.buttons button').forEach(button => {
+        button.addEventListener('click', handleButtonClick);
     });
-});
+}
 
-/* ... [restliche Taschenrechner-Funktionen identisch wie vorher] ... */
+// Button-Klick-Handler
+function handleButtonClick(e) {
+    const value = e.target.getAttribute('data-value');
 
-// WICHTIGE KORREKTUR:
+    if (value === 'C') {
+        clearCalculator();
+    } else if (value === '=') {
+        if (checkPassword(currentInput)) {
+            unlockVault();
+        } else {
+            calculate();
+        }
+    } else if (['+', '-', '×', '÷'].includes(value)) {
+        handleOperator(value);
+    } else {
+        handleNumberInput(value);
+    }
+
+    updateDisplay();
+}
+
+// Zahlen-Eingabe
+function handleNumberInput(value) {
+    if (shouldResetInput) {
+        currentInput = '0';
+        shouldResetInput = false;
+    }
+
+    if (value === '.') {
+        if (!currentInput.includes('.')) {
+            currentInput += value;
+        }
+    } else {
+        currentInput = currentInput === '0' ? value : currentInput + value;
+    }
+}
+
+// Operator-Handler
+function handleOperator(op) {
+    const inputValue = parseFloat(currentInput);
+
+    if (firstOperand === null) {
+        firstOperand = inputValue;
+    } else if (operator) {
+        const result = calculateResult(firstOperand, parseFloat(currentInput), operator);
+        currentInput = String(result);
+        firstOperand = result;
+    }
+
+    operator = op;
+    shouldResetInput = true;
+}
+
+// Berechnung
+function calculate() {
+    if (operator === null || firstOperand === null) return;
+
+    const inputValue = parseFloat(currentInput);
+    const result = calculateResult(firstOperand, inputValue, operator);
+    currentInput = String(result);
+    firstOperand = null;
+    operator = null;
+    shouldResetInput = true;
+}
+
+// Ergebnis berechnen
+function calculateResult(first, second, op) {
+    switch (op) {
+        case '+': return first + second;
+        case '-': return first - second;
+        case '×': return first * second;
+        case '÷': return first / second;
+        default: return second;
+    }
+}
+
+// Taschenrechner zurücksetzen
+function clearCalculator() {
+    currentInput = '0';
+    firstOperand = null;
+    operator = null;
+    shouldResetInput = false;
+}
+
+// Display aktualisieren
+function updateDisplay() {
+    display.textContent = currentInput;
+}
+
+// Passwort prüfen
 function checkPassword(input) {
     const password = localStorage.getItem('vaultPassword');
     return input === password;
 }
 
-// VAULT LOGIK
-document.getElementById('back-to-calculator').addEventListener('click', () => {
-    document.getElementById('vault-view').classList.add('hidden');
-    document.getElementById('calculator-view').classList.remove('hidden');
+// Tresor freischalten
+function unlockVault() {
+    calculatorView.classList.add('hidden');
+    vaultView.classList.remove('hidden');
     clearCalculator();
+}
+
+// Passwort setzen
+setPasswordButton.addEventListener('click', () => {
+    const password = newPasswordInput.value;
+    if (password) {
+        localStorage.setItem('vaultPassword', password);
+        passwordModal.style.display = 'none';
+    }
 });
 
-/* ... [restlicher Code unverändert] ... */
+// App starten
+document.addEventListener('DOMContentLoaded', initApp);
