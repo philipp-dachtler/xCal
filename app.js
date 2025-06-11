@@ -1,149 +1,140 @@
-// app.js - Vollständig korrigierte Version
+// app.js - Vollständig funktionierende Version
 
-// Taschenrechner Variablen
-let currentInput = '0';
-let firstOperand = null;
-let operator = null;
-let shouldResetInput = false;
+// Taschenrechner Zustand
+const calculator = {
+  currentInput: '0',
+  firstOperand: null,
+  operator: null,
+  shouldResetInput: false,
 
-// DOM Elemente
-const display = document.getElementById('display');
-const calculatorView = document.getElementById('calculator-view');
-const vaultView = document.getElementById('vault-view');
-const passwordModal = document.getElementById('password-modal');
-const newPasswordInput = document.getElementById('new-password');
-const setPasswordButton = document.getElementById('set-password');
-
-// Initialisierung
-function initApp() {
+  init() {
     // Passwort prüfen
     if (!localStorage.getItem('vaultPassword')) {
-        passwordModal.style.display = 'flex';
-    } else {
-        passwordModal.style.display = 'none';
+      document.getElementById('password-modal').style.display = 'flex';
     }
-    
-    // Taschenrechner-Buttons initialisieren
-    initCalculator();
-}
 
-// Taschenrechner initialisieren
-function initCalculator() {
+    // Tasten event listener
     document.querySelectorAll('.buttons button').forEach(button => {
-        button.addEventListener('click', handleButtonClick);
+      button.addEventListener('click', (e) => this.handleButtonClick(e));
     });
-}
 
-// Button-Klick-Handler
-function handleButtonClick(e) {
+    // Passwort setzen
+    document.getElementById('set-password').addEventListener('click', () => {
+      const password = document.getElementById('new-password').value;
+      if (password) {
+        localStorage.setItem('vaultPassword', password);
+        document.getElementById('password-modal').style.display = 'none';
+      }
+    });
+
+    // Zurück zum Rechner
+    document.getElementById('back-to-calculator').addEventListener('click', () => {
+      document.getElementById('vault-view').classList.add('hidden');
+      document.getElementById('calculator-view').classList.remove('hidden');
+      this.clear();
+    });
+  },
+
+  handleButtonClick(e) {
     const value = e.target.getAttribute('data-value');
-
+    
     if (value === 'C') {
-        clearCalculator();
+      this.clear();
     } else if (value === '=') {
-        if (checkPassword(currentInput)) {
-            unlockVault();
-        } else {
-            calculate();
-        }
+      if (this.checkPassword(this.currentInput)) {
+        this.unlockVault();
+      } else {
+        this.calculate();
+      }
     } else if (['+', '-', '×', '÷'].includes(value)) {
-        handleOperator(value);
+      this.handleOperator(value);
     } else {
-        handleNumberInput(value);
+      this.handleNumberInput(value);
     }
 
-    updateDisplay();
-}
+    this.updateDisplay();
+  },
 
-// Zahlen-Eingabe
-function handleNumberInput(value) {
-    if (shouldResetInput) {
-        currentInput = '0';
-        shouldResetInput = false;
+  handleNumberInput(value) {
+    if (this.shouldResetInput) {
+      this.currentInput = '0';
+      this.shouldResetInput = false;
     }
 
     if (value === '.') {
-        if (!currentInput.includes('.')) {
-            currentInput += value;
-        }
+      if (!this.currentInput.includes('.')) {
+        this.currentInput += value;
+      }
     } else {
-        currentInput = currentInput === '0' ? value : currentInput + value;
+      this.currentInput = this.currentInput === '0' ? value : this.currentInput + value;
     }
-}
+  },
 
-// Operator-Handler
-function handleOperator(op) {
-    const inputValue = parseFloat(currentInput);
+  handleOperator(op) {
+    const inputValue = parseFloat(this.currentInput);
 
-    if (firstOperand === null) {
-        firstOperand = inputValue;
-    } else if (operator) {
-        const result = calculateResult(firstOperand, parseFloat(currentInput), operator);
-        currentInput = String(result);
-        firstOperand = result;
+    if (this.firstOperand === null) {
+      this.firstOperand = inputValue;
+    } else if (this.operator) {
+      const result = this.calculateResult(this.firstOperand, parseFloat(this.currentInput), this.operator);
+      this.currentInput = String(result);
+      this.firstOperand = result;
     }
 
-    operator = op;
-    shouldResetInput = true;
-}
+    this.operator = op;
+    this.shouldResetInput = true;
+  },
 
-// Berechnung
-function calculate() {
-    if (operator === null || firstOperand === null) return;
+  calculate() {
+    if (this.operator === null || this.firstOperand === null) return;
 
-    const inputValue = parseFloat(currentInput);
-    const result = calculateResult(firstOperand, inputValue, operator);
-    currentInput = String(result);
-    firstOperand = null;
-    operator = null;
-    shouldResetInput = true;
-}
+    const inputValue = parseFloat(this.currentInput);
+    const result = this.calculateResult(this.firstOperand, inputValue, this.operator);
+    this.currentInput = String(result);
+    this.firstOperand = null;
+    this.operator = null;
+    this.shouldResetInput = true;
+  },
 
-// Ergebnis berechnen
-function calculateResult(first, second, op) {
+  calculateResult(first, second, op) {
     switch (op) {
-        case '+': return first + second;
-        case '-': return first - second;
-        case '×': return first * second;
-        case '÷': return first / second;
-        default: return second;
+      case '+': return first + second;
+      case '-': return first - second;
+      case '×': return first * second;
+      case '÷': return first / second;
+      default: return second;
     }
-}
+  },
 
-// Taschenrechner zurücksetzen
-function clearCalculator() {
-    currentInput = '0';
-    firstOperand = null;
-    operator = null;
-    shouldResetInput = false;
-}
+  clear() {
+    this.currentInput = '0';
+    this.firstOperand = null;
+    this.operator = null;
+    this.shouldResetInput = false;
+    this.updateDisplay();
+  },
 
-// Display aktualisieren
-function updateDisplay() {
-    display.textContent = currentInput;
-}
+  updateDisplay() {
+    document.getElementById('display').textContent = this.currentInput;
+  },
 
-// Passwort prüfen
-function checkPassword(input) {
+  checkPassword(input) {
     const password = localStorage.getItem('vaultPassword');
     return input === password;
-}
+  },
 
-// Tresor freischalten
-function unlockVault() {
-    calculatorView.classList.add('hidden');
-    vaultView.classList.remove('hidden');
-    clearCalculator();
-}
+  unlockVault() {
+    document.getElementById('calculator-view').classList.add('hidden');
+    document.getElementById('vault-view').classList.remove('hidden');
+    this.clear();
+    this.loadFolders();
+  },
 
-// Passwort setzen
-setPasswordButton.addEventListener('click', () => {
-    const password = newPasswordInput.value;
-    if (password) {
-        localStorage.setItem('vaultPassword', password);
-        passwordModal.style.display = 'none';
-    }
-});
+  loadFolders() {
+    // Hier würde die Ordnerliste geladen werden
+    console.log('Tresor geöffnet');
+  }
+};
 
 // App starten
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', () => calculator.init());
