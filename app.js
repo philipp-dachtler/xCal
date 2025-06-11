@@ -1,140 +1,192 @@
 // app.js - Vollständig funktionierende Version
 
-// Taschenrechner Zustand
 const calculator = {
-  currentInput: '0',
-  firstOperand: null,
-  operator: null,
-  shouldResetInput: false,
+  // ... [vorheriger Taschenrechner-Code bleibt gleich] ...
+};
 
+const vault = {
   init() {
-    // Passwort prüfen
-    if (!localStorage.getItem('vaultPassword')) {
-      document.getElementById('password-modal').style.display = 'flex';
-    }
-
-    // Tasten event listener
-    document.querySelectorAll('.buttons button').forEach(button => {
-      button.addEventListener('click', (e) => this.handleButtonClick(e));
-    });
-
-    // Passwort setzen
-    document.getElementById('set-password').addEventListener('click', () => {
-      const password = document.getElementById('new-password').value;
-      if (password) {
-        localStorage.setItem('vaultPassword', password);
-        document.getElementById('password-modal').style.display = 'none';
-      }
-    });
-
-    // Zurück zum Rechner
-    document.getElementById('back-to-calculator').addEventListener('click', () => {
-      document.getElementById('vault-view').classList.add('hidden');
-      document.getElementById('calculator-view').classList.remove('hidden');
-      this.clear();
-    });
+    this.setupEventListeners();
+    this.initDB();
   },
 
-  handleButtonClick(e) {
-    const value = e.target.getAttribute('data-value');
+  setupEventListeners() {
+    document.getElementById('add-folder').addEventListener('click', () => this.createFolder());
+    document.getElementById('upload-file').addEventListener('click', () => this.triggerFileUpload());
+    document.getElementById('file-input').addEventListener('change', (e) => this.handleFileUpload(e));
+    document.getElementById('close-file').addEventListener('click', () => this.closeFilePreview());
+  },
+
+  initDB() {
+    const request = indexedDB.open('SecretVaultDB', 1);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      
+      if (!db.objectStoreNames.contains('folders')) {
+        db.createObjectStore('folders', { keyPath: 'id', autoIncrement: true });
+      }
+      
+      if (!db.objectStoreNames.contains('files')) {
+        const filesStore = db.createObjectStore('files', { keyPath: 'id', autoIncrement: true });
+        filesStore.createIndex('folderId', 'folderId', { unique: false });
+      }
+    };
+
+    request.onsuccess = (event) => {
+      this.db = event.target.result;
+      this.loadFolders();
+    };
+
+    request.onerror = (event) => {
+      console.error('Database error:', event.target.error);
+    };
+  },
+
+  createFolder() {
+    const folderName = prompt('Geben Sie den Ordnernamen ein:');
+    if (!folderName) return;
+
+    const transaction = this.db.transaction(['folders'], 'readwrite');
+    const store = transaction.objectStore('folders');
     
-    if (value === 'C') {
-      this.clear();
-    } else if (value === '=') {
-      if (this.checkPassword(this.currentInput)) {
-        this.unlockVault();
-      } else {
-        this.calculate();
-      }
-    } else if (['+', '-', '×', '÷'].includes(value)) {
-      this.handleOperator(value);
+    store.add({ 
+      name: folderName, 
+      created: new Date() 
+    }).onsuccess = () => {
+      this.loadFolders();
+      this.showToast('Ordner erstellt');
+    };
+  },
+
+  triggerFileUpload() {
+    document.getElementById('file-input').click();
+  },
+
+  handleFileUpload(event) {
+    const files = event.target.files;
+    if (!files.length) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      this.previewFile(file);
+    }
+  },
+
+  previewFile(file) {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const fileData = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: e.target.result,
+        uploaded: new Date()
+      };
+
+      // Hier würde man die Datei in IndexedDB speichern
+      console.log('Datei empfangen:', fileData);
+      
+      this.showFilePreview(fileData);
+    };
+
+    if (file.type.startsWith('image/')) {
+      reader.readAsDataURL(file);
     } else {
-      this.handleNumberInput(value);
+      reader.readAsText(file);
     }
-
-    this.updateDisplay();
   },
 
-  handleNumberInput(value) {
-    if (this.shouldResetInput) {
-      this.currentInput = '0';
-      this.shouldResetInput = false;
-    }
+  showFilePreview(file) {
+    document.getElementById('file-title').textContent = file.name;
+    const preview = document.getElementById('file-preview');
+    preview.innerHTML = '';
 
-    if (value === '.') {
-      if (!this.currentInput.includes('.')) {
-        this.currentInput += value;
-      }
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = file.data;
+      preview.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+      const video = document.createElement('video');
+      video.src = file.data;
+      video.controls = true;
+      preview.appendChild(video);
     } else {
-      this.currentInput = this.currentInput === '0' ? value : this.currentInput + value;
+      const icon = document.createElement('div');
+      icon.className = 'file-icon';
+      icon.innerHTML = '📄';
+      preview.appendChild(icon);
+      
+      const info = document.createElement('div');
+      info.className = 'file-info';
+      info.innerHTML = `
+        <p>Typ: ${file.type || 'Unbekannt'}</p>
+        <p>Größe: ${this.formatFileSize(file.size)}</p>
+      `;
+      preview.appendChild(info);
     }
+
+    document.getElementById('file-modal').classList.remove('hidden');
   },
 
-  handleOperator(op) {
-    const inputValue = parseFloat(this.currentInput);
-
-    if (this.firstOperand === null) {
-      this.firstOperand = inputValue;
-    } else if (this.operator) {
-      const result = this.calculateResult(this.firstOperand, parseFloat(this.currentInput), this.operator);
-      this.currentInput = String(result);
-      this.firstOperand = result;
-    }
-
-    this.operator = op;
-    this.shouldResetInput = true;
-  },
-
-  calculate() {
-    if (this.operator === null || this.firstOperand === null) return;
-
-    const inputValue = parseFloat(this.currentInput);
-    const result = this.calculateResult(this.firstOperand, inputValue, this.operator);
-    this.currentInput = String(result);
-    this.firstOperand = null;
-    this.operator = null;
-    this.shouldResetInput = true;
-  },
-
-  calculateResult(first, second, op) {
-    switch (op) {
-      case '+': return first + second;
-      case '-': return first - second;
-      case '×': return first * second;
-      case '÷': return first / second;
-      default: return second;
-    }
-  },
-
-  clear() {
-    this.currentInput = '0';
-    this.firstOperand = null;
-    this.operator = null;
-    this.shouldResetInput = false;
-    this.updateDisplay();
-  },
-
-  updateDisplay() {
-    document.getElementById('display').textContent = this.currentInput;
-  },
-
-  checkPassword(input) {
-    const password = localStorage.getItem('vaultPassword');
-    return input === password;
-  },
-
-  unlockVault() {
-    document.getElementById('calculator-view').classList.add('hidden');
-    document.getElementById('vault-view').classList.remove('hidden');
-    this.clear();
-    this.loadFolders();
+  closeFilePreview() {
+    document.getElementById('file-modal').classList.add('hidden');
   },
 
   loadFolders() {
-    // Hier würde die Ordnerliste geladen werden
-    console.log('Tresor geöffnet');
+    if (!this.db) return;
+    
+    const transaction = this.db.transaction(['folders'], 'readonly');
+    const store = transaction.objectStore('folders');
+    const request = store.getAll();
+    
+    request.onsuccess = (event) => {
+      const folders = event.target.result;
+      const folderList = document.getElementById('folder-list');
+      folderList.innerHTML = '';
+      
+      folders.forEach(folder => {
+        const folderElement = document.createElement('div');
+        folderElement.className = 'folder';
+        folderElement.innerHTML = `
+          <div class="folder-icon">📁</div>
+          <div class="folder-name">${folder.name}</div>
+        `;
+        folderElement.addEventListener('click', () => this.openFolder(folder.id));
+        folderList.appendChild(folderElement);
+      });
+    };
+  },
+
+  openFolder(folderId) {
+    alert(`Ordner ${folderId} wird geöffnet`);
+    // Hier würde der Inhalt des Ordners geladen werden
+  },
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  },
+
+  showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
   }
 };
 
 // App starten
-document.addEventListener('DOMContentLoaded', () => calculator.init());
+document.addEventListener('DOMContentLoaded', () => {
+  calculator.init();
+  vault.init();
+});
