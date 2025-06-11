@@ -1,10 +1,7 @@
-@@ -1,101 +1,236 @@
-// app.js - Vollständig funktionierende Version
 // app.js - Vollständig korrigierte Version
 
 // Taschenrechner-Komponente
 const calculator = {
-  // ... [vorheriger Taschenrechner-Code bleibt gleich] ...
   currentInput: '0',
   firstOperand: null,
   operator: null,
@@ -139,10 +136,6 @@ const vault = {
   },
 
   setupEventListeners() {
-    document.getElementById('add-folder').addEventListener('click', () => this.createFolder());
-    document.getElementById('upload-file').addEventListener('click', () => this.triggerFileUpload());
-    document.getElementById('file-input').addEventListener('change', (e) => this.handleFileUpload(e));
-    document.getElementById('close-file').addEventListener('click', () => this.closeFilePreview());
     // Zurück-Button
     document.getElementById('back-to-calculator').addEventListener('click', () => {
       document.getElementById('vault-view').classList.add('hidden');
@@ -174,48 +167,35 @@ const vault = {
   initDB() {
     const request = indexedDB.open('SecretVaultDB', 1);
 
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      
     request.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('folders')) {
         db.createObjectStore('folders', { keyPath: 'id', autoIncrement: true });
       }
-      
       if (!db.objectStoreNames.contains('files')) {
-        const filesStore = db.createObjectStore('files', { keyPath: 'id', autoIncrement: true });
-        filesStore.createIndex('folderId', 'folderId', { unique: false });
         const store = db.createObjectStore('files', { keyPath: 'id', autoIncrement: true });
         store.createIndex('folderId', 'folderId', { unique: false });
       }
     };
 
-    request.onsuccess = (event) => {
-      this.db = event.target.result;
     request.onsuccess = (e) => {
       this.db = e.target.result;
       this.loadFolders();
     };
 
-    request.onerror = (event) => {
-      console.error('Database error:', event.target.error);
     request.onerror = (e) => {
       console.error('Database error:', e.target.error);
     };
   },
 
   createFolder() {
-    const folderName = prompt('Geben Sie den Ordnernamen ein:');
     const folderName = prompt('Ordnername:');
     if (!folderName) return;
 
     const transaction = this.db.transaction(['folders'], 'readwrite');
     const store = transaction.objectStore('folders');
-
+    
     store.add({ 
-      name: folderName, 
-      created: new Date() 
       name: folderName,
       created: new Date()
     }).onsuccess = () => {
@@ -224,32 +204,10 @@ const vault = {
     };
   },
 
-  triggerFileUpload() {
-    document.getElementById('file-input').click();
-  },
-
-  handleFileUpload(event) {
-    const files = event.target.files;
   handleFileUpload(e) {
     const files = e.target.files;
     if (!files.length) return;
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      this.previewFile(file);
-    }
-  },
-
-  previewFile(file) {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const fileData = {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        data: e.target.result,
-        uploaded: new Date()
     Array.from(files).forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -265,10 +223,6 @@ const vault = {
     });
   },
 
-      // Hier würde man die Datei in IndexedDB speichern
-      console.log('Datei empfangen:', fileData);
-      
-      this.showFilePreview(fileData);
   saveFile(file) {
     const transaction = this.db.transaction(['files'], 'readwrite');
     const store = transaction.objectStore('files');
@@ -277,29 +231,23 @@ const vault = {
       this.showFilePreview(file);
       this.showToast('Datei gespeichert');
     };
-
-    if (file.type.startsWith('image/')) {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsText(file);
-    }
   },
 
   showFilePreview(file) {
-@@ -113,80 +248,63 @@ const vault = {
+    document.getElementById('file-title').textContent = file.name;
+    const preview = document.getElementById('file-preview');
+    preview.innerHTML = '';
+
+    if (file.type.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = file.data;
+      preview.appendChild(img);
+    } else if (file.type.startsWith('video/')) {
+      const video = document.createElement('video');
+      video.src = file.data;
       video.controls = true;
       preview.appendChild(video);
     } else {
-      const icon = document.createElement('div');
-      icon.className = 'file-icon';
-      icon.innerHTML = '📄';
-      preview.appendChild(icon);
-      
-      const info = document.createElement('div');
-      info.className = 'file-info';
-      info.innerHTML = `
-        <p>Typ: ${file.type || 'Unbekannt'}</p>
-        <p>Größe: ${this.formatFileSize(file.size)}</p>
       preview.innerHTML = `
         <div class="file-icon">📄</div>
         <div class="file-info">
@@ -307,29 +255,17 @@ const vault = {
           <p>Größe: ${this.formatSize(file.size)}</p>
         </div>
       `;
-      preview.appendChild(info);
     }
 
     document.getElementById('file-modal').classList.remove('hidden');
   },
 
-  closeFilePreview() {
-    document.getElementById('file-modal').classList.add('hidden');
-  },
-
   loadFolders() {
     if (!this.db) return;
-    
 
     const transaction = this.db.transaction(['folders'], 'readonly');
     const store = transaction.objectStore('folders');
     const request = store.getAll();
-    
-    request.onsuccess = (event) => {
-      const folders = event.target.result;
-      const folderList = document.getElementById('folder-list');
-      folderList.innerHTML = '';
-      
 
     request.onsuccess = (e) => {
       const folders = e.target.result;
@@ -337,37 +273,22 @@ const vault = {
       container.innerHTML = '';
 
       folders.forEach(folder => {
-        const folderElement = document.createElement('div');
-        folderElement.className = 'folder';
-        folderElement.innerHTML = `
         const folderEl = document.createElement('div');
         folderEl.className = 'folder';
         folderEl.innerHTML = `
           <div class="folder-icon">📁</div>
-          <div class="folder-name">${folder.name}</div>
           <div>${folder.name}</div>
         `;
-        folderElement.addEventListener('click', () => this.openFolder(folder.id));
-        folderList.appendChild(folderElement);
         folderEl.addEventListener('click', () => this.openFolder(folder.id));
         container.appendChild(folderEl);
       });
     };
   },
 
-  openFolder(folderId) {
-    alert(`Ordner ${folderId} wird geöffnet`);
-    // Hier würde der Inhalt des Ordners geladen werden
   openFolder(id) {
     alert(`Ordner ${id} wird geöffnet`);
   },
 
-  formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   formatSize(bytes) {
     if (bytes < 1024) return `${bytes} Bytes`;
     if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -379,17 +300,11 @@ const vault = {
     toast.className = 'toast';
     toast.textContent = message;
     document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.classList.add('fade-out');
-      setTimeout(() => toast.remove(), 300);
-    }, 2000);
     setTimeout(() => toast.remove(), 3000);
   }
 };
 
 // App starten
 document.addEventListener('DOMContentLoaded', () => {
-  calculator.init();Add commentMore actions
-  vault.init();
+  calculator.init();
 });
