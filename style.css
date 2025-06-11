@@ -1,243 +1,54 @@
-:root {
-  --primary: #007AFF;
-  --background: #f0f0f0;
-  --calculator-bg: #fff;
-  --button-bg: #f9f9f9;
-  --button-active: #e0e0e0;
-  --operator-bg: #f1f1f1;
-  --operator-active: #d1d1d1;
-  --display-bg: #000;
-  --display-color: #fff;
-  --radius: 16px;
-  --shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  background: var(--background);
-  min-height: 100vh;
+/* Neue Stile für erweiterte Funktionen */
+.folder-actions {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
+  gap: 5px;
+  margin-top: 10px;
 }
 
-.hidden {
-  display: none !important;
-}
-
-/* Taschenrechner */
-#calculator-view {
-  width: 100%;
-  max-width: 400px;
-  background: var(--calculator-bg);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
-
-.display {
-  background: var(--display-bg);
-  color: var(--display-color);
-  font-size: 3em;
-  padding: 20px;
-  text-align: right;
-  min-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: #ccc;
-}
-
-.buttons button {
-  border: none;
-  padding: 20px;
-  font-size: 1.5em;
-  background: var(--button-bg);
-  transition: background 0.1s;
-}
-
-.buttons button:active {
-  background: var(--button-active);
-}
-
-.buttons .operator {
-  background: var(--operator-bg);
-  font-weight: 500;
-}
-
-.buttons .operator:active {
-  background: var(--operator-active);
-}
-
-.buttons .zero {
-  grid-column: span 2;
-}
-
-/* Tresor */
-#vault-view {
-  width: 100%;
-  max-width: 400px;
-}
-
-.vault-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.vault-header h1 {
+.folder-actions button {
   flex: 1;
-  text-align: center;
-  font-weight: 600;
+  padding: 5px;
+  font-size: 0.8em;
 }
 
-#back-to-calculator {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 1em;
-  padding: 8px;
+.file-list {
+  display: none;
 }
 
-.vault-content {
-  background: #fff;
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: var(--shadow);
-}
-
-.vault-actions {
+.file {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.vault-actions button {
-  flex: 1;
-  padding: 12px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: 500;
-}
-
-/* Ordner */
-#folder-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-}
-
-.folder {
-  background: #f8f8f8;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  transition: transform 0.2s;
-}
-
-.folder:active {
-  transform: scale(0.98);
-}
-
-.folder-icon {
-  font-size: 2.5em;
-  margin-bottom: 10px;
-}
-
-/* Modale */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 25px;
-  border-radius: var(--radius);
-  width: 90%;
-  max-width: 300px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  animation: modalIn 0.3s;
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* Dateivorschau */
-#file-preview {
-  margin: 20px 0;
-  max-height: 60vh;
-  overflow: auto;
-}
-
-#file-preview img, 
-#file-preview video {
-  max-width: 100%;
-  border-radius: 8px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
 }
 
 .file-icon {
-  font-size: 3em;
-  margin: 10px 0;
+  font-size: 1.5em;
+  margin-right: 10px;
 }
 
 .file-info {
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 500;
+}
+
+.file-meta {
+  font-size: 0.8em;
   color: #666;
-  font-size: 0.9em;
 }
 
-/* Toast */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.8);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  animation: toastIn 0.3s;
+#current-folder {
+  font-weight: 600;
+  margin-bottom: 15px;
 }
 
-@keyframes toastIn {
-  from { bottom: -50px; opacity: 0; }
-  to { bottom: 20px; opacity: 1; }
-}
-
-/* Responsive */
-@media (max-width: 400px) {
-  .display {
-    font-size: 2.5em;
-    padding: 15px;
-  }
-  
-  .buttons button {
-    padding: 15px;
-  }
+.modal select {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
